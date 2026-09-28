@@ -66,14 +66,14 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.55);
   }
   .topbar {
-    position: absolute; left: 8px; right: 8px; top: 6px; height: 46px;
+    position: absolute; left: 8px; right: 8px; top: 6px; height: 34px;
     background: linear-gradient(180deg, #181e2b, #10141d);
-    border-radius: 14px 14px 8px 8px;
+    border-radius: 12px 12px 6px 6px;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
   }
   .pivotcap {
-    position: absolute; left: 50%; top: 23px; width: 22px; height: 22px;
-    margin-left: -11px; border-radius: 50%;
+    position: absolute; left: 50%; top: 25px; width: 18px; height: 18px;
+    margin-left: -9px; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #3a4356, #1b212e 70%);
     box-shadow: inset 0 0 0 2px rgba(255,255,255,.08), 0 0 0 1px rgba(255,255,255,.05);
   }
@@ -136,10 +136,10 @@
   .dot.strong { width: 12px; height: 12px; }
   .readout { text-align: center; }
   .bpm {
-    font-size: 52px; font-weight: 650; line-height: 1; color: #f2f4f9;
+    font-size: 44px; font-weight: 650; line-height: 1; color: #f2f4f9;
     font-variant-numeric: tabular-nums; letter-spacing: .02em;
     background: transparent; border: none; outline: none; text-align: center;
-    width: 130px; height: 62px;
+    width: 118px; height: 50px;
   }
   .bpm:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc, #29e0ff) 45%, transparent); border-radius: 12px; background: rgba(255,255,255,.06); }
   .bpm::-webkit-inner-spin-button, .bpm::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
@@ -177,7 +177,7 @@
   }
   .tab.on { background: rgba(255,255,255,.1); color: #f2f4f9; border-color: color-mix(in srgb, var(--acc, #29e0ff) 55%, transparent); }
   .songs {
-    position: relative; flex: 1 1 auto; min-height: 118px; display: flex; flex-direction: column;
+    position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column;
     border-top: 1px solid rgba(255,255,255,.07);
   }
   .songhead {
@@ -189,7 +189,7 @@
   #list {
     max-height: 190px;
   }
-  ul { list-style: none; margin: 0; padding: 0; max-height: 210px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  ul { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; max-height: 210px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   ul li { display: flex; align-items: center; gap: 8px; }
   .row {
     display: flex; align-items: center; gap: 8px; padding: 11px 16px; flex: 1 1 auto;
@@ -333,7 +333,7 @@
     var st = $(".stage");
     var sw = st.clientWidth, sh = st.clientHeight;
     if (!sw || !sh) return;
-    var ARC = clamp(Math.min(sh * 0.62, sw * 0.5, 260), 110, 260);
+    var ARC = clamp(Math.min(sh * 0.78, sw * 0.6, 340), 130, 340);
     pend.style.height = ARC + "px";
     st.style.minHeight = 34 + ARC + 26 + "px";
     var sc = $("#scale");
