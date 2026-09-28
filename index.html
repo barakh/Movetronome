@@ -145,9 +145,9 @@
   .bpm::-webkit-inner-spin-button, .bpm::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   .bpmlabel { font-size: 10px; color: #8b93a7; letter-spacing: .2em; font-weight: 600; }
   .clamp { font-size: 11px; color: #5f6675; }
-  .controls { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 4px 0 6px; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 4px 10px 6px; }
   .big {
-    width: 76px; height: 76px; border-radius: 50%; border: none;
+    flex: 0 0 68px; width: 68px; height: 68px; border-radius: 50%; border: none;
     font-size: 20px;
     background: radial-gradient(circle at 40% 32%, #2a3444 0%, #232c3a 60%, #1a2130 100%);
     background: radial-gradient(circle at 40% 32%, color-mix(in srgb, var(--acc, #29e0ff) 22%, #27303f) 0%, #232c3a 60%, #1a2130 100%);
@@ -155,11 +155,12 @@
     box-shadow: 0 0 0 2px rgba(41,224,255,.55), 0 10px 22px rgba(0,0,0,.55), 0 0 16px rgba(41,224,255,.35);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc, #29e0ff) 55%, transparent), 0 10px 22px rgba(0,0,0,.55), 0 0 16px color-mix(in srgb, var(--acc, #29e0ff) 35%, transparent);
   }
-  .big svg { width: 34px; height: 34px; display: block; margin: 0 auto; }
+  .big svg { width: 30px; height: 30px; display: block; margin: 0 auto; }
   .small {
-    width: 58px; height: 58px; border-radius: 50%; border: 1px solid rgba(255,255,255,.1);
-    font-size: 26px; line-height: 1; color: #dfe5f2;
-    background: rgba(255,255,255,.06);
+    flex: 1 1 44px; max-width: 48px; height: 44px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.1);
+    font-size: 16px; line-height: 1; color: #dfe5f2;
+    background: rgba(255,255,255,.07);
   }
   .small:active, .big:active { transform: scale(.92); }
   .subrow { display: flex; align-items: center; justify-content: space-between; padding: 2px 18px; }
@@ -254,9 +255,13 @@
     </section>
 
     <section class="controls">
+      <button class="small" id="minus10">−10</button>
+      <button class="small" id="minus5">−5</button>
       <button class="small" id="minus">−</button>
       <button class="big" id="playbtn" aria-label="play pause"><svg id="playIc" viewBox="0 0 24 24"><path d="M8 4 h8 v16 h-8 z" fill="currentColor"/></svg><svg id="pauseIc" viewBox="0 0 24 24" style="display:none"><path d="M7 5 h4 v14 h-4 z M13 5 h4 v14 h-4 z" fill="currentColor"/></svg></button>
       <button class="small" id="plus">+</button>
+      <button class="small" id="plus5">+5</button>
+      <button class="small" id="plus10">+10</button>
     </section>
 
     <section class="subrow">
@@ -540,19 +545,23 @@
     }
   }
 
-  var holdTimer = null;
+  var holdTimer = null, pressTimer = null;
+  function stopHold() {
+    if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+    if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+  }
   function holdNudge(dir, btn) {
     btn.addEventListener("pointerdown", function (e) {
       e.preventDefault();
       act(dir);
-      holdTimer = setInterval(function () { act(dir); }, 75);
+      pressTimer = setTimeout(function () {
+        holdTimer = setInterval(function () { act(dir); }, 80);
+      }, 380);
       btn.addEventListener("pointerup", stopHold);
       btn.addEventListener("pointercancel", stopHold);
       btn.addEventListener("pointerleave", stopHold);
+      btn.addEventListener("blur", stopHold);
     });
-  }
-  function stopHold() {
-    if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
   }
   function act(dir) { setBpm(app.bpm + dir); }
 
@@ -625,10 +634,12 @@
     $("#mutebtn").classList.toggle("on", !app.muted);
   };
   $("#tap").onclick = tapTempo;
+  holdNudge(-10, $("#minus10"));
+  holdNudge(-5, $("#minus5"));
   holdNudge(-1, $("#minus"));
   holdNudge(1, $("#plus"));
-  $("#minus").onclick = function () { act(-1); };
-  $("#plus").onclick = function () { act(1); };
+  holdNudge(5, $("#plus5"));
+  holdNudge(10, $("#plus10"));
 
   bpmIn.oninput = function () { setBpm(bpmIn.value); };
   bpmIn.onfocus = function () { bpmFocused = true; };
