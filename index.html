@@ -65,75 +65,30 @@
     border: 1px solid rgba(255,255,255,.06);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.55);
   }
-  .topbar {
-    position: absolute; left: 8px; right: 8px; top: 6px; height: 34px;
-    background: linear-gradient(180deg, #181e2b, #10141d);
-    border-radius: 12px 12px 6px 6px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
+  .circles {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 18px;
   }
-  .pivotcap {
-    position: absolute; left: 50%; top: 25px; width: 18px; height: 18px;
-    margin-left: -9px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #3a4356, #1b212e 70%);
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,.08), 0 0 0 1px rgba(255,255,255,.05);
+  .circles .mc {
+    position: relative;
+    width: var(--csz, 84px); height: var(--csz, 84px); border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #151b29 0%, #0d1119 72%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 10px 22px rgba(0,0,0,.5);
+    transition: background .1s, box-shadow .12s, transform .32s;
   }
-  .pivotcap::after {
-    content: ""; position: absolute; left: 50%; top: 50%;
-    width: 8px; height: 8px; margin: -4px; border-radius: 50%;
-    background: var(--acc, #29e0ff); box-shadow: 0 0 10px var(--acc, #29e0ff);
+  .circles .mc::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 3px solid var(--c, #ff5d5d); opacity: .32;
   }
-  .scale {
-    position: absolute; pointer-events: none;
+  .circles .mc.on {
+    background: var(--c, #ff5d5d);
+    background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--c, #ff5d5d) 92%, white) 0%, var(--c, #ff5d5d) 55%, color-mix(in srgb, var(--c, #ff5d5d) 24%, #0d1119) 100%);
+    box-shadow: 0 0 36px var(--c, #ff5d5d), inset 0 1px 0 rgba(255,255,255,.4);
+    transform: scale(var(--grow, 1.05));
   }
-  .pendulum {
-    position: absolute; left: calc(50% - 5px); top: 34px; width: 10px;
-    transform-origin: 50% 0%; transform: rotate(0deg);
-    will-change: transform;
-  }
-  .pendulum .shaft {
-    position: absolute; left: 3px; top: 0; width: 4px; height: 100%;
-    background: linear-gradient(180deg, #3a4356 0%, #565f74 40%, #141923 100%);
-    border-radius: 2px;
-    box-shadow: 0 0 1px rgba(255,255,255,.18);
-  }
-  .pendulum .shaft::after {
-    content: ""; position: absolute; left: -1px; right: -1px; top: 0; bottom: 0;
-    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.35) 6%, transparent 70%);
-    opacity: .5;
-  }
-  .weight {
-    position: absolute; bottom: 12px; left: 50%;
-    width: 60px; height: 42px; margin-left: -30px; border-radius: 8px;
-    background: linear-gradient(180deg, #1a2130 0%, #10141d 100%);
-    border: 1px solid rgba(255,255,255,.12);
-    box-shadow: 0 3px 8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.09);
-  }
-  .weight::before {
-    content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4.5px;
-    width: 0; height: 0;
-    border-left: 4.5px solid transparent; border-right: 4.5px solid transparent;
-    border-top: 12px solid #8b95a8;
-    filter: drop-shadow(0 0 3px rgba(0,0,0,.5));
-  }
-  .weight::after {
-    content: ""; position: absolute; left: 50%; top: 50%;
-    width: 20px; height: 20px; margin: -10px; border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, #7df2ff 0%, #29e0ff 45%, #1b2733 100%);
-    background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--acc, #29e0ff) 78%, white) 0%, var(--acc, #29e0ff) 45%, color-mix(in srgb, var(--acc, #29e0ff) 30%, #141923) 100%);
-    box-shadow: 0 0 18px #1d8fe0, inset 0 1px 0 rgba(255,255,255,.4);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--acc, #29e0ff) 70%, transparent), inset 0 1px 0 rgba(255,255,255,.4);
-  }
-  .beatdots {
-    display: flex; align-items: center; gap: 9px;
-  }
-  .dot {
-    width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.14);
-    transition: background .06s, box-shadow .06s;
-  }
-  .dot.on { background: var(--acc, #29e0ff); box-shadow: 0 0 9px var(--acc, #29e0ff); border-color: transparent; }
-  .dot.strong { width: 12px; height: 12px; }
+  .circles .mc.on::after { border-color: color-mix(in srgb, var(--c, #ff5d5d) 85%, white); opacity: .9; }
+  .circles .mc.strong { --grow: 1.13; }
   .readout { text-align: center; }
   .bpm {
     font-size: 44px; font-weight: 650; line-height: 1; color: #f2f4f9;
@@ -242,16 +197,7 @@
 
     <section class="stage">
       <div class="housing"></div>
-      <div class="topbar"><div class="pivotcap"></div></div>
-      <div class="scale" id="scale"></div>
-      <div class="pendulum" id="pendulum">
-        <div class="shaft"></div>
-        <div class="weight"></div>
-      </div>
-    </section>
-
-    <section class="readout" style="text-align:center; padding-bottom:0">
-      <div class="beatdots" id="dots" style="justify-content:center"></div>
+      <div class="circles" id="circs"></div>
     </section>
 
     <section class="controls">
@@ -294,7 +240,6 @@
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var PALETTE = ["#ff5d5d", "#ffb43d", "#7dff8a", "#29e0ff", "#6f7bff", "#e56cff"];
-  var AMP = 30;
   var MINB = 24, MAXB = 320;
   var MIN_NOTE = 0.5;
   var NOTE = "\u266A";
@@ -308,16 +253,12 @@
     startTime: 0,
     nextBeat: 0,
     accent: "#ff5d5d",
-    audio: null,
-    curAng: 0
+    audio: null
   };
-  var svgNS = "http://www.w3.org/2000/svg";
-  var pend = $("#pendulum");
   var flash = $("#flash");
   var bpmIn = $("#bpm");
   var bpmFocused = false;
   var lastFrame = 0;
-  var mLeft = null, mRight = null;
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -331,71 +272,12 @@
 
   function layout() {
     var st = $(".stage");
-    var sw = st.clientWidth, sh = st.clientHeight;
-    if (!sw || !sh) return;
-    var ARC = clamp(Math.min(sh * 0.78, sw * 0.6, 340), 130, 340);
-    pend.style.height = ARC + "px";
-    st.style.minHeight = 34 + ARC + 26 + "px";
-    var sc = $("#scale");
-    var size = (ARC + 60) * 2;
-    sc.innerHTML = buildScale(ARC);
-    sc.style.width = sc.style.height = size + "px";
-    sc.style.left = (sw / 2 - (ARC + 60)) + "px";
-    sc.style.top = (34 - (ARC + 60)) + "px";
-    mLeft = sc.querySelector('[data-side="L"]');
-    mRight = sc.querySelector('[data-side="R"]');
-  }
-
-  function pt(deg, r, c) {
-    var a = deg * Math.PI / 180;
-    return [c + Math.sin(a) * r, c - Math.cos(a) * r];
-  }
-
-  function marker(side, RK, c) {
-    var th = side * AMP;
-    var p = pt(th, RK, c);
-    return '<g data-side="' + (side > 0 ? "R" : "L") + '" transform="translate(' + p[0].toFixed(2) + " " + p[1].toFixed(2) + ') rotate(' + th.toFixed(2) + ')" style="fill:var(--acc, #ff5d5d)" opacity="0.3">'
-      + '<rect x="-8" y="-10" width="16" height="20" rx="5"/>'
-      + "</g>";
-  }
-
-  function buildScale(RK) {
-    var pad = 60;
-    var S = (RK + pad) * 2;
-    var c = S / 2;
-    var parts = [];
-    var arc = [];
-    for (var d = -34; d <= 34; d += 1) arc.push(pt(d, RK - 2, c).map(function (p) { return p.toFixed(2); }).join(","));
-    parts.push('<path d="M ' + arc.join(" L ") + '" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.6" stroke-linecap="round"/>');
-    for (var t = -32; t <= 32; t += 4) {
-      var major = t % 8 === 0;
-      var w = major ? 2.6 : 1.2;
-      var op = t === 0 ? .55 : (major ? .3 : .17);
-      var mid = pt(t, RK - 2, c), inn = pt(t, RK - (major ? 20 : 13), c);
-      var col = t === 0 ? "var(--acc, #ff5d5d)" : "rgba(255,255,255," + op + ")";
-      parts.push('<line x1="' + mid[0].toFixed(2) + '" y1="' + mid[1].toFixed(2) + '" x2="' + inn[0].toFixed(2) + '" y2="' + inn[1].toFixed(2) + '" style="stroke:' + col + '" stroke-width="' + w + '" stroke-linecap="round"/>');
-    }
-    parts.push(marker(1, RK, c));
-    parts.push(marker(-1, RK, c));
-    return '<svg xmlns="' + svgNS + '" viewBox="0 0 ' + S + " " + S + '" width="100%" height="100%">' + parts.join("") + "</svg>";
-  }
-
-  function drawPendulum(now) {
-    var target;
-    if (app.running) {
-      var t = (now - app.startTime) / 1000;
-      target = AMP * Math.cos(2 * Math.PI * (app.bpm / 120) * t);
-    } else target = 0;
-    app.curAng += (target - app.curAng) * (app.running ? 1 : 0.1);
-    if (!app.running && Math.abs(app.curAng) < 0.03) app.curAng = 0;
-    pend.style.transform = "rotate(" + app.curAng.toFixed(3) + "deg)";
-    if (mLeft || mRight) {
-      var a = app.curAng;
-      var l = Math.max(0, 1 - Math.abs(a + AMP) / AMP);
-      var r = Math.max(0, 1 - Math.abs(a - AMP) / AMP);
-      if (mLeft) mLeft.setAttribute("opacity", (0.22 + 0.78 * l).toFixed(3));
-      if (mRight) mRight.setAttribute("opacity", (0.22 + 0.78 * r).toFixed(3));
-    }
+    var sw = st.clientWidth;
+    if (!sw) return;
+    var gap = 18;
+    var avail = sw - 56;
+    var csz = Math.floor((avail - (app.beats - 1) * gap) / app.beats);
+    st.style.setProperty("--csz", Math.max(Math.min(csz, 96), 44) + "px");
   }
 
   function fireBeat(beatTime) {
@@ -415,15 +297,13 @@
     flash.style.transition = "opacity " + decay + "ms ease-out";
     flash.style.opacity = "0";
     if (!app.muted) clickSound(down);
-    paintDots(idx, col);
+    paintCircles(idx);
     app.beatCount++;
   }
 
-  function paintDots(cur, col) {
-    var d = document.querySelectorAll(".dot");
-    for (var i = 0; i < d.length; i++) {
-      if (i < app.beats) d[i].classList.toggle("on", i === cur);
-    }
+  function paintCircles(cur) {
+    var d = document.querySelectorAll(".mc");
+    for (var i = 0; i < d.length; i++) d[i].classList.toggle("on", i === cur);
   }
 
   function scheduleBeats(now) {
@@ -434,10 +314,12 @@
     }
   }
 
-  function renderDots() {
-    var box = $("#dots");
+  function renderCircles() {
+    var box = $("#circs");
     var h = "";
-    for (var i = 0; i < app.beats; i++) h += '<div class="dot' + (i === 0 ? " strong" : "") + '"></div>';
+    for (var i = 0; i < app.beats; i++) {
+      h += '<div class="mc' + (i === 0 ? " strong" : "") + '" style="--c:' + PALETTE[i] + '"></div>';
+    }
     box.innerHTML = h;
   }
 
@@ -456,7 +338,8 @@
 
   function setBeats(n) {
     app.beats = n;
-    renderDots();
+    renderCircles();
+    layout();
     renderTabs();
   }
 
@@ -651,7 +534,6 @@
   function loop(now) {
     if (lastFrame) {
       if (app.running) scheduleBeats(now);
-      drawPendulum(now);
     }
     lastFrame = now;
     requestAnimationFrame(loop);
