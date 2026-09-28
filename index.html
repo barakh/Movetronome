@@ -328,7 +328,7 @@
     var st = $(".stage");
     var sw = st.clientWidth, sh = st.clientHeight;
     if (!sw || !sh) return;
-    var ARC = clamp(Math.min(sh * 0.5, sw * 0.4, 210), 110, 210);
+    var ARC = clamp(Math.min(sh * 0.62, sw * 0.5, 260), 110, 260);
     pend.style.height = ARC + "px";
     st.style.minHeight = 34 + ARC + 26 + "px";
     var sc = $("#scale");
