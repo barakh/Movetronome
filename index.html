@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b0f14'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2329e0ff'/%3E%3C/svg%3E">
+<title>MOVETRONOME</title>
+<style>
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    user-select: none;
+    box-sizing: border-box;
+  }
+  html, body { height: 100%; overflow: hidden; margin: 0; }
+  body {
+    background: radial-gradient(120% 90% at 50% 0%, #101622 0%, #0b0f14 55%, #07090c 100%);
+    font-family: "Inter", "SF Pro Display", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #e8eaf0;
+  }
+  #app {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+  }
+  #flash {
+    position: fixed; inset: 0; z-index: 999; pointer-events: none; opacity: 0;
+  }
+  #grain {
+    position: fixed; inset: 0; z-index: 998; pointer-events: none; opacity: .5;
+    background:
+      radial-gradient(70% 55% at 50% 18%, rgba(255,255,255,.045) 0%, transparent 60%),
+      radial-gradient(40% 40% at 12% 88%, rgba(255,255,255,.025) 0%, transparent 70%);
+  }
+  header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px calc(14px + env(safe-area-inset-top));
+    z-index: 5;
+  }
+  .brand { font-weight: 700; letter-spacing: .14em; font-size: 15px; color: #c9d2e6; }
+  .brand b { color: var(--acc, #29e0ff); }
+  .chip {
+    font-size: 11px; font-weight: 600; color: #8b93a7;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 999px; padding: 3px 9px; letter-spacing: .05em;
+  }
+  .iconbtn {
+    width: 40px; height: 40px; border-radius: 12px; border: none;
+    background: rgba(255,255,255,.07); color: #b9c2d4;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+  }
+  .iconbtn svg { width: 20px; height: 20px; }
+  .iconbtn.on { color: var(--acc, #29e0ff); background: rgba(255,255,255,.12); }
+  .stage {
+    position: relative; flex: 1 1 auto; margin: 0; overflow: hidden;
+  }
+  .housing {
+    position: absolute; left: 8px; right: 8px; top: 6px;
+    height: calc(100% - 18px);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #10141d 0%, #0b0f16 55%, #0a0e15 100%);
+    border: 1px solid rgba(255,255,255,.06);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.55);
+  }
+  .topbar {
+    position: absolute; left: 8px; right: 8px; top: 6px; height: 46px;
+    background: linear-gradient(180deg, #181e2b, #10141d);
+    border-radius: 14px 14px 8px 8px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09);
+  }
+  .pivotcap {
+    position: absolute; left: 50%; top: 23px; width: 22px; height: 22px;
+    margin-left: -11px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #3a4356, #1b212e 70%);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.08), 0 0 0 1px rgba(255,255,255,.05);
+  }
+  .pivotcap::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 8px; height: 8px; margin: -4px; border-radius: 50%;
+    background: var(--acc, #29e0ff); box-shadow: 0 0 10px var(--acc, #29e0ff);
+  }
+  .scale {
+    position: absolute; pointer-events: none;
+  }
+  .pendulum {
+    position: absolute; left: calc(50% - 5px); top: 34px; width: 10px;
+    transform-origin: 50% 0%; transform: rotate(0deg);
+    will-change: transform;
+  }
+  .pendulum .shaft {
+    position: absolute; left: 3px; top: 0; width: 4px; height: 100%;
+    background: linear-gradient(180deg, #3a4356 0%, #565f74 40%, #141923 100%);
+    border-radius: 2px;
+    box-shadow: 0 0 1px rgba(255,255,255,.18);
+  }
+  .pendulum .shaft::after {
+    content: ""; position: absolute; left: -1px; right: -1px; top: 0; bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.35) 6%, transparent 70%);
+    opacity: .5;
+  }
+  .weight {
+    position: absolute; bottom: 12px; left: 50%;
+    width: 60px; height: 42px; margin-left: -30px; border-radius: 8px;
+    background: linear-gradient(180deg, #1a2130 0%, #10141d 100%);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 3px 8px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.09);
+  }
+  .weight::before {
+    content: ""; position: absolute; left: 50%; top: 100%; margin-left: -4.5px;
+    width: 0; height: 0;
+    border-left: 4.5px solid transparent; border-right: 4.5px solid transparent;
+    border-top: 12px solid #8b95a8;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,.5));
+  }
+  .weight::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 20px; height: 20px; margin: -10px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #7df2ff 0%, #29e0ff 45%, #1b2733 100%);
+    background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--acc, #29e0ff) 78%, white) 0%, var(--acc, #29e0ff) 45%, color-mix(in srgb, var(--acc, #29e0ff) 30%, #141923) 100%);
+    box-shadow: 0 0 18px #1d8fe0, inset 0 1px 0 rgba(255,255,255,.4);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--acc, #29e0ff) 70%, transparent), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .beatdots {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.14);
+    transition: background .06s, box-shadow .06s;
+  }
+  .dot.on { background: var(--acc, #29e0ff); box-shadow: 0 0 9px var(--acc, #29e0ff); border-color: transparent; }
+  .dot.strong { width: 12px; height: 12px; }
+  .readout { text-align: center; }
+  .bpm {
+    font-size: 52px; font-weight: 650; line-height: 1; color: #f2f4f9;
+    font-variant-numeric: tabular-nums; letter-spacing: .02em;
+    background: transparent; border: none; outline: none; text-align: center;
+    width: 130px; height: 62px;
+  }
+  .bpm:focus { box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc, #29e0ff) 45%, transparent); border-radius: 12px; background: rgba(255,255,255,.06); }
+  .bpm::-webkit-inner-spin-button, .bpm::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .bpmlabel { font-size: 10px; color: #8b93a7; letter-spacing: .2em; font-weight: 600; }
+  .clamp { font-size: 11px; color: #5f6675; }
+  .controls { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 4px 0 6px; }
+  .big {
+    width: 76px; height: 76px; border-radius: 50%; border: none;
+    font-size: 20px;
+    background: radial-gradient(circle at 40% 32%, #2a3444 0%, #232c3a 60%, #1a2130 100%);
+    background: radial-gradient(circle at 40% 32%, color-mix(in srgb, var(--acc, #29e0ff) 22%, #27303f) 0%, #232c3a 60%, #1a2130 100%);
+    color: #0b0f14;
+    box-shadow: 0 0 0 2px rgba(41,224,255,.55), 0 10px 22px rgba(0,0,0,.55), 0 0 16px rgba(41,224,255,.35);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--acc, #29e0ff) 55%, transparent), 0 10px 22px rgba(0,0,0,.55), 0 0 16px color-mix(in srgb, var(--acc, #29e0ff) 35%, transparent);
+  }
+  .big svg { width: 34px; height: 34px; display: block; margin: 0 auto; }
+  .small {
+    width: 58px; height: 58px; border-radius: 50%; border: 1px solid rgba(255,255,255,.1);
+    font-size: 26px; line-height: 1; color: #dfe5f2;
+    background: rgba(255,255,255,.06);
+  }
+  .small:active, .big:active { transform: scale(.92); }
+  .subrow { display: flex; align-items: center; justify-content: space-between; padding: 2px 18px; }
+  .tapbtn {
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.07);
+    color: #c9d2e6; font-size: 12px; font-weight: 700; letter-spacing: .18em;
+    border-radius: 999px; height: 44px; padding: 0 18px;
+  }
+  .tapbtn:active { background: color-mix(in srgb, var(--acc, #29e0ff) 30%, #1a2130); }
+  .tabs { display: flex; gap: 6px; }
+  .tab {
+    min-width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1);
+    background: transparent; color: #8b93a7; font-size: 14px; font-weight: 700; padding: 0 6px;
+  }
+  .tab.on { background: rgba(255,255,255,.1); color: #f2f4f9; border-color: color-mix(in srgb, var(--acc, #29e0ff) 55%, transparent); }
+  .songs {
+    position: relative; flex: 1 1 auto; min-height: 118px; display: flex; flex-direction: column;
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .songhead {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 16px calc(7px + env(safe-area-inset-bottom));
+  }
+  .songhead h2 { margin: 0; font-size: 11px; letter-spacing: .22em; font-weight: 700; color: #8b93a7; }
+  .clear { background: none; border: none; color: #62697a; font-size: 11px; cursor: pointer; }
+  #list {
+    max-height: 190px;
+  }
+  ul { list-style: none; margin: 0; padding: 0; max-height: 210px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  ul li { display: flex; align-items: center; gap: 8px; }
+  .row {
+    display: flex; align-items: center; gap: 8px; padding: 11px 16px; flex: 1 1 auto;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.07); border-radius: 12px;
+    color: #dfe5f2;
+  }
+  .row:active { background: rgba(255,255,255,.09); }
+  .row .note { color: rgba(255,255,255,.22); font-size: 15px; width: 22px; text-align: center; }
+  .row .nm { flex: 1 1 auto; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14.5px; font-weight: 600; }
+  .row .rp {
+    font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; color: #c9d2e6;
+    background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 999px; padding: 4px 9px; letter-spacing: .04em;
+  }
+  .row.playing { border-color: color-mix(in srgb, var(--acc, #29e0ff) 45%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--acc, #29e0ff) 40%, transparent); }
+  .row.playing .rp { color: var(--acc, #29e0ff); border-color: var(--acc, #29e0ff); }
+  .del {
+    width: 30px; height: 30px; border-radius: 8px; border: none; flex: 0 0 auto;
+    background: transparent; color: #737c8f; font-size: 18px; line-height: 1;
+  }
+  .del:active { background: rgba(255,255,255,.12); color: #ff6b6b; }
+  .empty { color: #6d7484; font-size: 12.5px; text-align: center; padding: 14px 16px; letter-spacing: .03em; }
+  form.save { display: flex; gap: 8px; margin: 10px 16px 0; }
+  form.save input {
+    flex: 1 1 auto; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.05); color: #dfe5f2; outline: none; font-size: 14px;
+    padding: 0 12px;
+  }
+  form.save input:focus { border-color: color-mix(in srgb, var(--acc, #29e0ff) 50%, transparent); }
+  form.save button {
+    height: 44px; padding: 0 16px; border-radius: 12px; border: none; font-weight: 700;
+    background: #1d8fe0; background: color-mix(in srgb, var(--acc, #29e0ff) 70%, #123456);
+    color: #071016; font-size: 13px; letter-spacing: .12em;
+  }
+  .footpad { height: calc(10px + env(safe-area-inset-bottom)); }
+</style>
+</head>
+<body>
+  <div id="flash"></div>
+  <div id="grain"></div>
+  <main id="app">
+    <header>
+      <div class="brand">MOVE<b>TRONOME</b><span class="chip" id="sigchip">4/4</span></div>
+      <div style="flex:1"></div>
+      <button class="iconbtn" id="mutebtn" aria-label="toggle sound">
+        <svg id="icOn" viewBox="0 0 24 24"><rect x="5.5" y="4" width="13" height="16" rx="3.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4.4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M16 12 q3.5 -4.5 6.5 -0.6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M16 12 q5 -6.5 9.5 -1.2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".5"/></svg>
+        <svg id="icOff" viewBox="0 0 24 24" style="display:none"><rect x="5.5" y="4" width="13" height="16" rx="3.5" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="4.4" stroke="currentColor" stroke-width="2" fill="none"/><path d="M8.8 8.8 l6.4 6.4 M8.8 15.2 l6.4 -6.4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <section class="stage">
+      <div class="housing"></div>
+      <div class="topbar"><div class="pivotcap"></div></div>
+      <div class="scale" id="scale"></div>
+      <div class="pendulum" id="pendulum">
+        <div class="shaft"></div>
+        <div class="weight"></div>
+      </div>
+    </section>
+
+    <section class="readout" style="text-align:center; padding-bottom:0">
+      <div class="beatdots" id="dots" style="justify-content:center"></div>
+    </section>
+
+    <section class="controls">
+      <button class="small" id="minus">−</button>
+      <button class="big" id="playbtn" aria-label="play pause"><svg id="playIc" viewBox="0 0 24 24"><path d="M8 4 h8 v16 h-8 z" fill="currentColor"/></svg><svg id="pauseIc" viewBox="0 0 24 24" style="display:none"><path d="M7 5 h4 v14 h-4 z M13 5 h4 v14 h-4 z" fill="currentColor"/></svg></button>
+      <button class="small" id="plus">+</button>
+    </section>
+
+    <section class="subrow">
+      <button class="tapbtn" id="tap">TAP TEMPO</button>
+      <div class="tabs" id="tabs"></div>
+    </section>
+
+    <section class="readout" style="padding-top:0; padding-bottom:0">
+      <input class="bpm" id="bpm" inputmode="numeric" value="120">
+      <div class="bpmlabel">BPM</div>
+      <div class="clamp">24 – 320</div>
+    </section>
+
+    <section class="songs">
+      <div class="songhead">
+        <h2>SAVED SONGS</h2>
+        <button class="clear" id="clearall">clear all</button>
+      </div>
+      <ul id="list"></ul>
+      <div class="empty" id="empty">No songs yet — save your tempo below</div>
+      <form class="save" id="saveForm">
+        <input id="songname" placeholder="song name" maxlength="28">
+        <button type="submit">SAVE</button>
+      </form>
+      <div class="footpad"></div>
+    </section>
+  </main>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var PALETTE = ["#ff5d5d", "#ffb43d", "#7dff8a", "#29e0ff", "#6f7bff", "#e56cff"];
+  var AMP = 30;
+  var MINB = 24, MAXB = 320;
+  var MIN_NOTE = 0.5;
+  var NOTE = "\u266A";
+  var app = {
+    bpm: 120,
+    beats: 4,
+    running: false,
+    muted: false,
+    beatCount: 0,
+    beatMs: 500,
+    startTime: 0,
+    nextBeat: 0,
+    accent: "#ff5d5d",
+    audio: null,
+    curAng: 0
+  };
+  var svgNS = "http://www.w3.org/2000/svg";
+  var pend = $("#pendulum");
+  var flash = $("#flash");
+  var bpmIn = $("#bpm");
+  var bpmFocused = false;
+  var lastFrame = 0;
+  var mLeft = null, mRight = null;
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function setAccent(c) {
+    app.accent = c;
+    document.documentElement.style.setProperty("--acc", c);
+  }
+  setAccent(app.accent);
+
+  function beatMs() { return 60000.0 / app.bpm; }
+
+  function layout() {
+    var st = $(".stage");
+    var sw = st.clientWidth, sh = st.clientHeight;
+    if (!sw || !sh) return;
+    var ARC = clamp(Math.min(sh * 0.5, sw * 0.4, 210), 110, 210);
+    pend.style.height = ARC + "px";
+    st.style.minHeight = 34 + ARC + 26 + "px";
+    var sc = $("#scale");
+    var size = (ARC + 60) * 2;
+    sc.innerHTML = buildScale(ARC);
+    sc.style.width = sc.style.height = size + "px";
+    sc.style.left = (sw / 2 - (ARC + 60)) + "px";
+    sc.style.top = (34 - (ARC + 60)) + "px";
+    mLeft = sc.querySelector('[data-side="L"]');
+    mRight = sc.querySelector('[data-side="R"]');
+  }
+
+  function pt(deg, r, c) {
+    var a = deg * Math.PI / 180;
+    return [c + Math.sin(a) * r, c - Math.cos(a) * r];
+  }
+
+  function marker(side, RK, c) {
+    var th = side * AMP;
+    var p = pt(th, RK, c);
+    return '<g data-side="' + (side > 0 ? "R" : "L") + '" transform="translate(' + p[0].toFixed(2) + " " + p[1].toFixed(2) + ') rotate(' + th.toFixed(2) + ')" style="fill:var(--acc, #ff5d5d)" opacity="0.3">'
+      + '<rect x="-8" y="-10" width="16" height="20" rx="5"/>'
+      + "</g>";
+  }
+
+  function buildScale(RK) {
+    var pad = 60;
+    var S = (RK + pad) * 2;
+    var c = S / 2;
+    var parts = [];
+    var arc = [];
+    for (var d = -34; d <= 34; d += 1) arc.push(pt(d, RK - 2, c).map(function (p) { return p.toFixed(2); }).join(","));
+    parts.push('<path d="M ' + arc.join(" L ") + '" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.6" stroke-linecap="round"/>');
+    for (var t = -32; t <= 32; t += 4) {
+      var major = t % 8 === 0;
+      var w = major ? 2.6 : 1.2;
+      var op = t === 0 ? .55 : (major ? .3 : .17);
+      var mid = pt(t, RK - 2, c), inn = pt(t, RK - (major ? 20 : 13), c);
+      var col = t === 0 ? "var(--acc, #ff5d5d)" : "rgba(255,255,255," + op + ")";
+      parts.push('<line x1="' + mid[0].toFixed(2) + '" y1="' + mid[1].toFixed(2) + '" x2="' + inn[0].toFixed(2) + '" y2="' + inn[1].toFixed(2) + '" style="stroke:' + col + '" stroke-width="' + w + '" stroke-linecap="round"/>');
+    }
+    parts.push(marker(1, RK, c));
+    parts.push(marker(-1, RK, c));
+    return '<svg xmlns="' + svgNS + '" viewBox="0 0 ' + S + " " + S + '" width="100%" height="100%">' + parts.join("") + "</svg>";
+  }
+
+  function drawPendulum(now) {
+    var target;
+    if (app.running) {
+      var t = (now - app.startTime) / 1000;
+      target = AMP * Math.cos(2 * Math.PI * (app.bpm / 120) * t);
+    } else target = 0;
+    app.curAng += (target - app.curAng) * (app.running ? 1 : 0.1);
+    if (!app.running && Math.abs(app.curAng) < 0.03) app.curAng = 0;
+    pend.style.transform = "rotate(" + app.curAng.toFixed(3) + "deg)";
+    if (mLeft || mRight) {
+      var a = app.curAng;
+      var l = Math.max(0, 1 - Math.abs(a + AMP) / AMP);
+      var r = Math.max(0, 1 - Math.abs(a - AMP) / AMP);
+      if (mLeft) mLeft.setAttribute("opacity", (0.22 + 0.78 * l).toFixed(3));
+      if (mRight) mRight.setAttribute("opacity", (0.22 + 0.78 * r).toFixed(3));
+    }
+  }
+
+  function fireBeat(beatTime) {
+    var now = performance.now();
+    var b = beatMs();
+    if (now - beatTime > b * 2.2) { app.beatCount++; return; }
+    var idx = app.beatCount % app.beats;
+    var col = PALETTE[idx];
+    var down = idx === 0;
+    setAccent(col);
+    var decay = clamp(b * 0.62, 70, 330);
+    var peak = down ? 0.5 : 0.26;
+    flash.style.background = col;
+    flash.style.transition = "none";
+    flash.style.opacity = peak;
+    void flash.getBoundingClientRect();
+    flash.style.transition = "opacity " + decay + "ms ease-out";
+    flash.style.opacity = "0";
+    if (!app.muted) clickSound(down);
+    paintDots(idx, col);
+    app.beatCount++;
+  }
+
+  function paintDots(cur, col) {
+    var d = document.querySelectorAll(".dot");
+    for (var i = 0; i < d.length; i++) {
+      if (i < app.beats) d[i].classList.toggle("on", i === cur);
+    }
+  }
+
+  function scheduleBeats(now) {
+    var b = beatMs();
+    while (app.nextBeat <= now) {
+      fireBeat(app.nextBeat);
+      app.nextBeat += b;
+    }
+  }
+
+  function renderDots() {
+    var box = $("#dots");
+    var h = "";
+    for (var i = 0; i < app.beats; i++) h += '<div class="dot' + (i === 0 ? " strong" : "") + '"></div>';
+    box.innerHTML = h;
+  }
+
+  function renderTabs() {
+    var tabs = $("#tabs");
+    var h = "";
+    var opts = [2, 3, 4, 5, 6];
+    for (var i = 0; i < opts.length; i++) {
+      h += '<button class="tab' + (opts[i] === app.beats ? " on" : "") + '" data-beats="' + opts[i] + '">' + opts[i] + "/4</button>";
+    }
+    tabs.innerHTML = h;
+    var kids = tabs.querySelectorAll(".tab");
+    for (var j = 0; j < kids.length; j++) kids[j].onclick = function (e) { setBeats(parseInt(e.currentTarget.getAttribute("data-beats"), 10)); };
+    $("#sigchip").textContent = app.beats + "/4";
+  }
+
+  function setBeats(n) {
+    app.beats = n;
+    renderDots();
+    renderTabs();
+  }
+
+  function resync() {
+    var now = performance.now();
+    app.startTime = now;
+    app.nextBeat = now;
+  }
+
+  function setBpm(v) {
+    v = Math.round(Number(v));
+    if (isNaN(v)) return;
+    v = clamp(v, MINB, MAXB);
+    if (v === app.bpm) { updateBpmInput(); return; }
+    app.bpm = v;
+    app.beatMs = beatMs();
+    resync();
+    updateBpmInput();
+  }
+
+  function updateBpmInput() {
+    if (!bpmFocused) bpmIn.value = app.bpm;
+  }
+
+  function initAudio() {
+    if (app.audio) { if (app.audio.ctx.state === "suspended") app.audio.ctx.resume(); return; }
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var master = ctx.createGain();
+      master.gain.value = 0.85;
+      master.connect(ctx.destination);
+      app.audio = { ctx: ctx, master: master };
+    } catch (e) { app.audio = null; }
+  }
+
+  function clickSound(down) {
+    var a = app.audio;
+    if (!a) return;
+    var ctx = a.ctx, t = ctx.currentTime;
+    var dur = down ? 0.09 : 0.05;
+    var f = down ? 780 : 1520;
+    var env = function (freq, vol, len, lag) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq;
+      var s = t + (lag || 0);
+      g.gain.setValueAtTime(0.0001, s);
+      g.gain.linearRampToValueAtTime(vol, s + 0.0015);
+      g.gain.linearRampToValueAtTime(vol * 0.35, s + 0.007);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + len);
+      o.connect(g); g.connect(a.master);
+      o.start(s); o.stop(s + len + 0.03);
+    };
+    env(f, 0.55, dur, 0);
+    env(f * 2.01, 0.2, dur * 0.45, 0);
+    if (down) env(f * 0.55, 0.35, dur * 1.8, 0.002);
+  }
+
+  function togglePlay() {
+    if (!app.running) {
+      initAudio();
+      app.running = true;
+      app.beatCount = 0;
+      resync();
+    } else {
+      app.running = false;
+    }
+    syncPlayIcon();
+  }
+
+  function syncPlayIcon() {
+    $("#playIc").style.display = app.running ? "none" : "block";
+    $("#pauseIc").style.display = app.running ? "block" : "none";
+  }
+
+  var taps = [];
+  function tapTempo() {
+    var now = performance.now();
+    if (taps.length && now - taps[taps.length - 1] > 1500) taps = [];
+    taps.push(now);
+    if (taps.length < 2) return;
+    var sum = 0;
+    for (var i = 1; i < taps.length; i++) sum += taps[i] - taps[i - 1];
+    if (taps.length >= 3) {
+      var avg = sum / (taps.length - 1);
+      setBpm(clamp(Math.round(60000 / avg), MINB, MAXB));
+    }
+  }
+
+  var holdTimer = null;
+  function holdNudge(dir, btn) {
+    btn.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      act(dir);
+      holdTimer = setInterval(function () { act(dir); }, 75);
+      btn.addEventListener("pointerup", stopHold);
+      btn.addEventListener("pointercancel", stopHold);
+      btn.addEventListener("pointerleave", stopHold);
+    });
+  }
+  function stopHold() {
+    if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+  }
+  function act(dir) { setBpm(app.bpm + dir); }
+
+  function saveSongs() {
+    try { localStorage.setItem("mt.songs", JSON.stringify(songs)); } catch (e) {}
+  }
+  var songs = [];
+  try { songs = JSON.parse(localStorage.getItem("mt.songs") || "[]"); if (!Array.isArray(songs)) songs = []; } catch (e) { songs = []; }
+
+  function renderSongs() {
+    var ul = $("#list");
+    var empty = $("#empty");
+    var h = "";
+    for (var i = 0; i < songs.length; i++) {
+      var s = songs[i];
+      var playing = app.running && s.bpm === app.bpm;
+      h += '<li><button type="button" class="row' + (playing ? " playing" : "") + '" data-idx="' + i + '"><span class="note">' + NOTE + "</span><span class=\"nm\">" + esc(s.name) + '</span><span class="rp">' + s.bpm + '</span></button><button type="button" class="del" data-idx="' + i + '">✕</button></li>';
+    }
+    ul.innerHTML = h;
+    empty.style.display = songs.length ? "none" : "block";
+    var rows = ul.querySelectorAll(".row");
+    for (var r = 0; r < rows.length; r++) rows[r].onclick = function (e) { loadSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10)); };
+    var dels = ul.querySelectorAll(".del");
+    for (var d = 0; d < dels.length; d++) dels[d].onclick = function (e) { e.stopPropagation(); removeSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10)); };
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function loadSong(i) {
+    var s = songs[i];
+    if (!s) return;
+    setBpm(s.bpm);
+    if (!app.running) togglePlay();
+    renderSongs();
+  }
+  function removeSong(i) {
+    songs.splice(i, 1);
+    saveSongs();
+    renderSongs();
+  }
+
+  $("#saveForm").onsubmit = function (e) {
+    e.preventDefault();
+    var name = $("#songname").value.trim();
+    if (!name) return;
+    var found = null;
+    for (var i = 0; i < songs.length; i++) if (songs[i].name.toLowerCase() === name.toLowerCase()) found = i;
+    if (found !== null) songs[found].bpm = app.bpm;
+    else songs.push({ name: name, bpm: app.bpm });
+    saveSongs();
+    renderSongs();
+    $("#songname").value = "";
+    var ul = $("#list");
+    ul.scrollTop = ul.scrollHeight;
+  };
+
+  $("#clearall").onclick = function () {
+    songs = [];
+    saveSongs();
+    renderSongs();
+  };
+
+  $("#playbtn").onclick = togglePlay;
+  $("#mutebtn").onclick = function () {
+    app.muted = !app.muted;
+    $("#icOn").style.display = app.muted ? "none" : "block";
+    $("#icOff").style.display = app.muted ? "block" : "none";
+    $("#mutebtn").classList.toggle("on", !app.muted);
+  };
+  $("#tap").onclick = tapTempo;
+  holdNudge(-1, $("#minus"));
+  holdNudge(1, $("#plus"));
+  $("#minus").onclick = function () { act(-1); };
+  $("#plus").onclick = function () { act(1); };
+
+  bpmIn.oninput = function () { setBpm(bpmIn.value); };
+  bpmIn.onfocus = function () { bpmFocused = true; };
+  bpmIn.onblur = function () { bpmFocused = false; updateBpmInput(); };
+  document.addEventListener("keydown", function (e) {
+    if (e.key === " " && e.target.tagName !== "INPUT") { e.preventDefault(); togglePlay(); }
+  });
+
+  function loop(now) {
+    if (lastFrame) {
+      if (app.running) scheduleBeats(now);
+      drawPendulum(now);
+    }
+    lastFrame = now;
+    requestAnimationFrame(loop);
+  }
+
+  setBeats(4);
+  renderSongs();
+  layout();
+  requestAnimationFrame(loop);
+  window.addEventListener("resize", layout);
+  window.addEventListener("orientationchange", function () { setTimeout(layout, 200); });
+})();
+</script>
+</body>
+</html>
