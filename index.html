@@ -55,18 +55,19 @@
   .iconbtn svg { width: 20px; height: 20px; }
   .iconbtn.on { color: var(--acc, #29e0ff); background: rgba(255,255,255,.12); }
   .stage {
-    position: relative; flex: 1 1 auto; margin: 0; overflow: hidden;
+    position: relative; flex: 0 0 auto; margin: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
   }
   .housing {
-    position: absolute; left: 8px; right: 8px; top: 6px;
-    height: calc(100% - 18px);
-    border-radius: 22px;
+    height: calc(var(--csz, 84px) + 64px);
+    margin: 0 8px;
+    border-radius: 26px;
     background: linear-gradient(180deg, #10141d 0%, #0b0f16 55%, #0a0e15 100%);
     border: 1px solid rgba(255,255,255,.06);
     box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.55);
+    display: flex; align-items: center; justify-content: center;
   }
   .circles {
-    position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     flex-wrap: wrap; gap: 18px;
   }
@@ -132,7 +133,7 @@
   }
   .tab.on { background: rgba(255,255,255,.1); color: #f2f4f9; border-color: color-mix(in srgb, var(--acc, #29e0ff) 55%, transparent); }
   .songs {
-    position: relative; flex: 0 1 auto; min-height: 0; display: flex; flex-direction: column;
+    position: relative; flex: 1 1 auto; min-height: 96px; display: flex; flex-direction: column;
     border-top: 1px solid rgba(255,255,255,.07);
   }
   .songhead {
@@ -141,10 +142,7 @@
   }
   .songhead h2 { margin: 0; font-size: 11px; letter-spacing: .22em; font-weight: 700; color: #8b93a7; }
   .clear { background: none; border: none; color: #62697a; font-size: 11px; cursor: pointer; }
-  #list {
-    max-height: 190px;
-  }
-  ul { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; max-height: 210px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  ul { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   ul li { display: flex; align-items: center; gap: 8px; }
   .row {
     display: flex; align-items: center; gap: 8px; padding: 11px 16px; flex: 1 1 auto;
@@ -196,8 +194,7 @@
     </header>
 
     <section class="stage">
-      <div class="housing"></div>
-      <div class="circles" id="circs"></div>
+      <div class="housing"><div class="circles" id="circs"></div></div>
     </section>
 
     <section class="controls">
@@ -259,6 +256,7 @@
   var bpmIn = $("#bpm");
   var bpmFocused = false;
   var lastFrame = 0;
+  try { app.muted = localStorage.getItem("mt.muted") === "1"; } catch (e) {}
 
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
@@ -510,11 +508,15 @@
   };
 
   $("#playbtn").onclick = togglePlay;
-  $("#mutebtn").onclick = function () {
-    app.muted = !app.muted;
+  function syncMuteIcon() {
     $("#icOn").style.display = app.muted ? "none" : "block";
     $("#icOff").style.display = app.muted ? "block" : "none";
     $("#mutebtn").classList.toggle("on", !app.muted);
+  }
+  $("#mutebtn").onclick = function () {
+    app.muted = !app.muted;
+    try { localStorage.setItem("mt.muted", app.muted ? "1" : "0"); } catch (e) {}
+    syncMuteIcon();
   };
   $("#tap").onclick = tapTempo;
   holdNudge(-10, $("#minus10"));
@@ -541,6 +543,7 @@
 
   setBeats(4);
   renderSongs();
+  syncMuteIcon();
   layout();
   requestAnimationFrame(loop);
   window.addEventListener("resize", layout);
