@@ -12,6 +12,7 @@ and your saved song tempos are one tap away.
 - One circle per beat, each with its own consistent colour
 - BPM control: −10 / −5 / −1 / +1 / +5 / +10, tap-tempo, or type it in
 - Save song names with their tempo to a persistent list (`localStorage`)
+- Reorder songs in "reorder" mode with ▲/▼ buttons; order is saved
 - Time signatures 2/4 – 6/4
 - Tick sound synthesized with WebAudio — no audio files, no network; mute persists
 - No dependencies, no server — just open `index.html`

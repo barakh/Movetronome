@@ -144,7 +144,9 @@
     padding: 7px 16px calc(7px + env(safe-area-inset-bottom));
   }
   .songhead h2 { margin: 0; font-size: 11px; letter-spacing: .22em; font-weight: 700; color: #8b93a7; }
-  .clear { background: none; border: none; color: #62697a; font-size: 11px; cursor: pointer; }
+  .clear { background: none; border: none; color: #62697a; font-size: 11px; cursor: pointer; padding: 4px 0; }
+  .clear.on { color: color-mix(in srgb, var(--acc, #29e0ff) 85%, #ffffff); }
+  .songacts { display: flex; align-items: center; gap: 14px; }
   ul { list-style: none; margin: 0; padding: 0; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
   ul li { display: flex; align-items: center; gap: 8px; }
   .row {
@@ -167,6 +169,16 @@
     background: transparent; color: #737c8f; font-size: 18px; line-height: 1;
   }
   .del:active { background: rgba(255,255,255,.12); color: #ff6b6b; }
+  .mv {
+    width: 34px; height: 34px; flex: 0 0 auto; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.06);
+    color: #c9d2e6; font-size: 11px; line-height: 1; padding: 0;
+  }
+  .mv:active { background: rgba(255,255,255,.16); }
+  .mv[disabled] { opacity: .22; }
+  .mv:focus-visible { outline: 2px solid color-mix(in srgb, var(--acc, #29e0ff) 70%, transparent); outline-offset: 1px; }
+  .row.static { cursor: default; }
+  .row.static:active { background: rgba(255,255,255,.04); }
   .empty { color: #6d7484; font-size: 12.5px; text-align: center; padding: 14px 16px; letter-spacing: .03em; }
   form.save { display: flex; gap: 8px; margin: 10px 16px 0; }
   form.save input {
@@ -224,7 +236,10 @@
     <section class="songs">
       <div class="songhead">
         <h2>SAVED SONGS</h2>
-        <button class="clear" id="clearall">clear all</button>
+        <div class="songacts">
+          <button class="clear" id="reorder" aria-pressed="false">reorder</button>
+          <button class="clear" id="clearall">clear all</button>
+        </div>
       </div>
       <ul id="list"></ul>
       <div class="empty" id="empty">No songs yet — save your tempo below</div>
@@ -455,6 +470,7 @@
   }
   var songs = [];
   try { songs = JSON.parse(localStorage.getItem("mt.songs") || "[]"); if (!Array.isArray(songs)) songs = []; } catch (e) { songs = []; }
+  var reordering = false;
 
   function renderSongs() {
     var ul = $("#list");
@@ -463,14 +479,30 @@
     for (var i = 0; i < songs.length; i++) {
       var s = songs[i];
       var playing = app.running && s.bpm === app.bpm;
-      h += '<li><button type="button" class="row' + (playing ? " playing" : "") + '" data-idx="' + i + '"><span class="note">' + NOTE + "</span><span class=\"nm\">" + esc(s.name) + '</span><span class="rp">' + s.bpm + '</span></button><button type="button" class="del" data-idx="' + i + '">✕</button></li>';
+      var cls = "row" + (playing ? " playing" : "");
+      var inner = '<span class="note">' + NOTE + '</span><span class="nm">' + esc(s.name) + '</span><span class="rp">' + s.bpm + '</span>';
+      if (reordering) {
+        h += '<li><div class="' + cls + ' static">' + inner + '</div>' +
+          '<button type="button" class="mv" data-idx="' + i + '" data-dir="-1" aria-label="move ' + esc(s.name) + ' up"' + (i === 0 ? " disabled" : "") + '>▲</button>' +
+          '<button type="button" class="mv" data-idx="' + i + '" data-dir="1" aria-label="move ' + esc(s.name) + ' down"' + (i === songs.length - 1 ? " disabled" : "") + '>▼</button></li>';
+      } else {
+        h += '<li><button type="button" class="' + cls + '" data-idx="' + i + '">' + inner + '</button><button type="button" class="del" data-idx="' + i + '" aria-label="delete ' + esc(s.name) + '">✕</button></li>';
+      }
     }
     ul.innerHTML = h;
     empty.style.display = songs.length ? "none" : "block";
     var rows = ul.querySelectorAll(".row");
-    for (var r = 0; r < rows.length; r++) rows[r].onclick = function (e) { loadSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10)); };
+    for (var r = 0; r < rows.length; r++) {
+      if (rows[r].getAttribute("data-idx") === null) continue;
+      rows[r].onclick = function (e) { loadSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10)); };
+    }
     var dels = ul.querySelectorAll(".del");
     for (var d = 0; d < dels.length; d++) dels[d].onclick = function (e) { e.stopPropagation(); removeSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10)); };
+    var mvs = ul.querySelectorAll(".mv");
+    for (var m = 0; m < mvs.length; m++) mvs[m].onclick = function (e) {
+      e.stopPropagation();
+      moveSong(parseInt(e.currentTarget.getAttribute("data-idx"), 10), parseInt(e.currentTarget.getAttribute("data-dir"), 10));
+    };
   }
 
   function esc(s) {
@@ -489,6 +521,27 @@
     saveSongs();
     renderSongs();
   }
+  function moveSong(i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= songs.length) return;
+    var s = songs[i];
+    songs[i] = songs[j];
+    songs[j] = s;
+    saveSongs();
+    renderSongs();
+    var ul = $("#list");
+    var btn = ul.querySelector('.mv[data-idx="' + j + '"][data-dir="' + dir + '"]');
+    if (!btn || btn.disabled) btn = ul.querySelector('.mv[data-idx="' + j + '"]:not([disabled])');
+    if (btn) btn.focus();
+  }
+  $("#reorder").onclick = function () {
+    reordering = !reordering;
+    this.textContent = reordering ? "done" : "reorder";
+    this.classList.toggle("on", reordering);
+    this.setAttribute("aria-pressed", reordering ? "true" : "false");
+    $("#clearall").style.display = reordering ? "none" : "";
+    renderSongs();
+  };
 
   $("#saveForm").onsubmit = function (e) {
     e.preventDefault();
