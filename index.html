@@ -59,8 +59,7 @@
   .iconbtn.on { color: var(--acc, #29e0ff); background: rgba(255,255,255,.12); }
   .stage {
     position: relative; flex: 0 0 auto; margin: 0; overflow: hidden;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 12px; padding-bottom: 4px;
+    display: flex; align-items: center; justify-content: center;
   }
   .housing {
     height: calc(var(--csz, 84px) + 64px);
@@ -86,33 +85,23 @@
     content: ""; position: absolute; inset: -4px; border-radius: 50%;
     border: 3px solid var(--c, #ff5d5d); opacity: .32;
   }
+  .circles .mc::before {
+    content: ""; position: absolute; inset: 5px; border-radius: 50%;
+    background: conic-gradient(from -90deg, color-mix(in srgb, var(--c, #29e0ff) 55%, transparent) var(--p, 0%), transparent 0);
+    opacity: 0; transition: opacity .15s;
+    pointer-events: none;
+  }
+  .circles .mc.next::before { opacity: 1; }
   .circles .mc.on {
-    background: var(--c, #ff5d5d);
-    background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--c, #ff5d5d) 92%, white) 0%, var(--c, #ff5d5d) 55%, color-mix(in srgb, var(--c, #ff5d5d) 24%, #0d1119) 100%);
-    box-shadow: 0 0 36px var(--c, #ff5d5d), inset 0 1px 0 rgba(255,255,255,.4);
+    background: var(--c, #29e0ff);
+    background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--c, #29e0ff) 92%, white) 0%, var(--c, #29e0ff) 55%, color-mix(in srgb, var(--c, #29e0ff) 24%, #0d1119) 100%);
+    box-shadow: 0 0 36px var(--c, #29e0ff), inset 0 1px 0 rgba(255,255,255,.4);
     transform: scale(var(--grow, 1.05));
   }
-  .circles .mc.on::after { border-color: color-mix(in srgb, var(--c, #ff5d5d) 85%, white); opacity: .9; }
+  .circles .mc.on::after { border-color: color-mix(in srgb, var(--c, #29e0ff) 85%, white); opacity: .9; }
   .circles .mc.strong { --grow: 1.13; }
-  .beatbar {
-    position: relative;
-    width: calc(100% - 32px); height: 3px; flex: 0 0 auto;
-    border-radius: 999px; overflow: hidden;
-    background: rgba(255,255,255,.09);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,.45);
-  }
-  .beatbar::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background-image: linear-gradient(to right, rgba(255,255,255,.55) 0 1px, transparent 1px);
-    background-size: calc(100% / var(--beats, 4)) 100%;
-    background-repeat: repeat-x;
-  }
-  .beatbar .fill {
-    width: 100%; height: 100%; border-radius: inherit;
-    transform: scaleX(0); transform-origin: left center;
-    background: var(--acc, #29e0ff);
-    box-shadow: 0 0 10px color-mix(in srgb, var(--acc, #29e0ff) 70%, transparent);
-  }
+  .circles .mc.down::after { border-width: 4px; opacity: .55; }
+  .circles .mc.down.on::after { opacity: 1; }
   .readout { text-align: center; }
   .bpm {
     font-size: 44px; font-weight: 650; line-height: 1; color: #f2f4f9;
@@ -230,7 +219,6 @@
 
     <section class="stage">
       <div class="housing"><div class="circles" id="circs"></div></div>
-      <div class="beatbar" id="beatbar"><div class="fill" id="beatfill"></div></div>
     </section>
 
     <section class="controls">
@@ -275,7 +263,7 @@
 <script>
 (function () {
   var $ = function (s) { return document.querySelector(s); };
-  var PALETTE = ["#ff5d5d", "#ffb43d", "#7dff8a", "#29e0ff", "#6f7bff", "#e56cff"];
+  var ACCENT = "#29e0ff";
   var MINB = 24, MAXB = 320;
   var MIN_NOTE = 0.5;
   var NOTE = "\u266A";
@@ -288,11 +276,10 @@
     beatMs: 500,
     startTime: 0,
     nextBeat: 0,
-    accent: "#ff5d5d",
+    accent: ACCENT,
     audio: null
   };
   var flash = $("#flash");
-  var beatFill = $("#beatfill");
   var bpmIn = $("#bpm");
   var bpmFocused = false;
   var lastFrame = 0;
@@ -323,25 +310,31 @@
     var b = beatMs();
     if (now - beatTime > b * 2.2) { app.beatCount++; return; }
     var idx = app.beatCount % app.beats;
-    var col = PALETTE[idx];
     var down = idx === 0;
-    setAccent(col);
     var decay = clamp(b * 0.62, 70, 330);
     var peak = down ? 0.5 : 0.26;
-    flash.style.background = col;
+    flash.style.background = app.accent;
     flash.style.transition = "none";
     flash.style.opacity = peak;
     void flash.getBoundingClientRect();
     flash.style.transition = "opacity " + decay + "ms ease-out";
     flash.style.opacity = "0";
     if (!app.muted) clickSound(down);
-    paintCircles(idx);
+    paintCircles(idx, (idx + 1) % app.beats);
     app.beatCount++;
   }
 
-  function paintCircles(cur) {
+  function paintCircles(cur, next) {
     var d = document.querySelectorAll(".mc");
-    for (var i = 0; i < d.length; i++) d[i].classList.toggle("on", i === cur);
+    for (var i = 0; i < d.length; i++) {
+      d[i].classList.toggle("on", i === cur);
+      d[i].classList.toggle("next", i === next);
+    }
+  }
+
+  function clearCircles() {
+    var d = document.querySelectorAll(".mc");
+    for (var i = 0; i < d.length; i++) d[i].classList.remove("on", "next");
   }
 
   function scheduleBeats(now) {
@@ -356,7 +349,7 @@
     var box = $("#circs");
     var h = "";
     for (var i = 0; i < app.beats; i++) {
-      h += '<div class="mc' + (i === 0 ? " strong" : "") + '" style="--c:' + PALETTE[i] + '"></div>';
+      h += '<div class="mc' + (i === 0 ? " strong down" : "") + '" style="--c:' + app.accent + '"></div>';
     }
     box.innerHTML = h;
   }
@@ -376,7 +369,6 @@
 
   function setBeats(n) {
     app.beats = n;
-    $("#beatbar").style.setProperty("--beats", n);
     renderCircles();
     layout();
     renderTabs();
@@ -444,6 +436,7 @@
       resync();
     } else {
       app.running = false;
+      clearCircles();
     }
     syncPlayIcon();
   }
@@ -613,15 +606,15 @@
     if (e.key === " " && e.target.tagName !== "INPUT") { e.preventDefault(); togglePlay(); }
   });
 
-  function updateBeatBar(now) {
+  function updateFill(now) {
+    var el = document.querySelector(".mc.next");
+    if (!el) return;
     var p = 0;
     if (app.running && app.beatCount > 0) {
       var b = beatMs();
-      var inBeat = clamp((now - (app.nextBeat - b)) / b, 0, 1);
-      var beatIdx = (app.beatCount - 1) % app.beats;
-      p = (beatIdx + inBeat) / app.beats;
+      p = clamp((now - (app.nextBeat - b)) / b, 0, 1);
     }
-    beatFill.style.transform = "scaleX(" + p.toFixed(4) + ")";
+    el.style.setProperty("--p", (p * 100).toFixed(2) + "%");
   }
 
   function loop(now) {
@@ -629,7 +622,7 @@
       if (app.running) scheduleBeats(now);
     }
     lastFrame = now;
-    updateBeatBar(now);
+    updateFill(now);
     requestAnimationFrame(loop);
   }
 
