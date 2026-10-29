@@ -95,10 +95,17 @@
   .circles .mc.on::after { border-color: color-mix(in srgb, var(--c, #ff5d5d) 85%, white); opacity: .9; }
   .circles .mc.strong { --grow: 1.13; }
   .beatbar {
+    position: relative;
     width: calc(100% - 32px); height: 3px; flex: 0 0 auto;
     border-radius: 999px; overflow: hidden;
     background: rgba(255,255,255,.09);
     box-shadow: inset 0 1px 2px rgba(0,0,0,.45);
+  }
+  .beatbar::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: linear-gradient(to right, rgba(255,255,255,.55) 0 1px, transparent 1px);
+    background-size: calc(100% / var(--beats, 4)) 100%;
+    background-repeat: repeat-x;
   }
   .beatbar .fill {
     width: 100%; height: 100%; border-radius: inherit;
@@ -369,6 +376,7 @@
 
   function setBeats(n) {
     app.beats = n;
+    $("#beatbar").style.setProperty("--beats", n);
     renderCircles();
     layout();
     renderTabs();
