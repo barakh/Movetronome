@@ -85,13 +85,6 @@
     content: ""; position: absolute; inset: -4px; border-radius: 50%;
     border: 3px solid var(--c, #ff5d5d); opacity: .32;
   }
-  .circles .mc::before {
-    content: ""; position: absolute; inset: 5px; border-radius: 50%;
-    background: conic-gradient(from -90deg, color-mix(in srgb, var(--c, #29e0ff) 55%, transparent) var(--p, 0%), transparent 0);
-    opacity: 0; transition: opacity .15s;
-    pointer-events: none;
-  }
-  .circles .mc.next::before { opacity: 1; }
   .circles .mc.on {
     background: var(--c, #29e0ff);
     background: radial-gradient(circle at 38% 32%, color-mix(in srgb, var(--c, #29e0ff) 92%, white) 0%, var(--c, #29e0ff) 55%, color-mix(in srgb, var(--c, #29e0ff) 24%, #0d1119) 100%);
@@ -320,21 +313,18 @@
     flash.style.transition = "opacity " + decay + "ms ease-out";
     flash.style.opacity = "0";
     if (!app.muted) clickSound(down);
-    paintCircles(idx, (idx + 1) % app.beats);
+    paintCircles(idx);
     app.beatCount++;
   }
 
-  function paintCircles(cur, next) {
+  function paintCircles(cur) {
     var d = document.querySelectorAll(".mc");
-    for (var i = 0; i < d.length; i++) {
-      d[i].classList.toggle("on", i === cur);
-      d[i].classList.toggle("next", i === next);
-    }
+    for (var i = 0; i < d.length; i++) d[i].classList.toggle("on", i === cur);
   }
 
   function clearCircles() {
     var d = document.querySelectorAll(".mc");
-    for (var i = 0; i < d.length; i++) d[i].classList.remove("on", "next");
+    for (var i = 0; i < d.length; i++) d[i].classList.remove("on");
   }
 
   function scheduleBeats(now) {
@@ -606,23 +596,11 @@
     if (e.key === " " && e.target.tagName !== "INPUT") { e.preventDefault(); togglePlay(); }
   });
 
-  function updateFill(now) {
-    var el = document.querySelector(".mc.next");
-    if (!el) return;
-    var p = 0;
-    if (app.running && app.beatCount > 0) {
-      var b = beatMs();
-      p = clamp((now - (app.nextBeat - b)) / b, 0, 1);
-    }
-    el.style.setProperty("--p", (p * 100).toFixed(2) + "%");
-  }
-
   function loop(now) {
     if (lastFrame) {
       if (app.running) scheduleBeats(now);
     }
     lastFrame = now;
-    updateFill(now);
     requestAnimationFrame(loop);
   }
 

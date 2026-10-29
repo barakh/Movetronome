@@ -9,7 +9,7 @@ and your saved song tempos are one tap away.
 ## Features
 
 - Full-screen colour flash on every beat — the downbeat flashes strongest
-- One circle per beat in a single accent colour, with a radial fill counting down the upcoming beat
+- One circle per beat in a single accent colour
 - Downbeat circle has a heavier ring so it stands out at a glance
 - BPM control: −10 / −5 / −1 / +1 / +5 / +10, tap-tempo, or type it in
 - Save song names with their tempo to a persistent list (`localStorage`)
