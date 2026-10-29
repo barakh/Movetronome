@@ -10,6 +10,7 @@ and your saved song tempos are one tap away.
 
 - Full-screen colour flash on every beat — the downbeat flashes strongest
 - One circle per beat, each with its own consistent colour
+- Thin progress bar under the circles fills left to right across the measure
 - BPM control: −10 / −5 / −1 / +1 / +5 / +10, tap-tempo, or type it in
 - Save song names with their tempo to a persistent list (`localStorage`)
 - Reorder songs in "reorder" mode with ▲/▼ buttons; order is saved
